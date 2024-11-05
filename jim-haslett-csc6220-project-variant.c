@@ -75,25 +75,6 @@ int CompareSplit(int nlocal, int *elmnts, int *relmnts, int *wspace, int keepsma
     return 1;
 }
 
-/**
- * TESTING FUNCTION 
- */
-void print_status(int *local, int *received, int num, int rank, int iteration) {
-    char *tmp = (char *) malloc((num*2*4 + 30)*sizeof(char));
-    int j = 0;
-    j += sprintf(tmp+j, "I: %d r: %d  L: ", iteration, rank);
-    for(int i = 0; i < num; i++) {
-        j += sprintf(tmp+j, "%4d", local[i]);
-    }
-    j += sprintf(tmp+j, "  R: ");
-    for(int i = 0; i < num; i++) {
-        j += sprintf(tmp+j, "%4d", received[i]);
-    }
-    j += sprintf(tmp+j, "\n");
-    printf(tmp);
-    free(tmp);
-}
-
 
 int main(int argc,char* argv[]) {
 
@@ -134,14 +115,6 @@ int main(int argc,char* argv[]) {
     int array_elements_unchanged_count;
     /* Timer variables */
     double start_time, end_time;
-
-/**
- * test
- */        
-    int *test;
-/**
- * /test
- */        
 
     if(rank == 0) {
 
@@ -227,20 +200,7 @@ int main(int argc,char* argv[]) {
         array_elements_unchanged_count = -1;
     }
 
-/**
- * TESTING!!
- */
-    if(rank==0) {
-        test = (int *)malloc(array_size*sizeof(int));
-        /* deep copy */
-        for(int i = 0; i < array_size; i++) {
-            test[i] = start_array[i];
-        }
-        qsort(test, array_size, sizeof(int), comparer);
-    }
-/**
- * /TESTING!!
- */
+
     MPI_Gather( local_array, number_of_local_elements, MPI_INT, start_array, number_of_local_elements, MPI_INT, 0, MPI_COMM_WORLD);
 
     /* Free allocated memory */
@@ -283,18 +243,6 @@ int main(int argc,char* argv[]) {
         }
         printf("\n");
 
-/**
- * TESTING!!
- */        
-        for(int i = 0; i < array_size; i++) {
-            if( start_array[i]  != test[i] ){
-                printf("Validation Failure! at %d  E/O: %d  V: %d\n", i, start_array[i], test[i]);
-            }
-        }
-        free(test);
-/**
- * /TESTING!!
- */   
 
         /* Free allocated memory */
         free(start_array);
