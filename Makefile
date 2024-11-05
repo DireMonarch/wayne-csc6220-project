@@ -2,7 +2,7 @@ CC      =       /opt/ohpc/pub/mpi/openmpi3-gnu7/3.1.0/bin/mpicc
 CCLINK  =       /opt/ohpc/pub/mpi/openmpi3-gnu7/3.1.0/bin/mpicc
 SHELL   =       /bin/sh
 
-all: standard
+all: standard variant
 
 standard: jim-haslett-csc6220-project-standard.c
 	$(CC) -o jim-haslett-csc6220-project-standard jim-haslett-csc6220-project-standard.c

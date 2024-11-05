@@ -34,7 +34,13 @@ int comparer(const void *e1, const void *e2)
 
 
 /* This is the CompareSplit function from the textbook */  /* it is horribly unreadable code */
-void CompareSplit(int nlocal, int *elmnts, int *relmnts, int *wspace, int keepsmall)
+int CompareSplit(int nlocal, int *elmnts, int *relmnts, int *wspace, int keepsmall)
+/**
+ * Modified original CompareSplit funciton from textbook.  Not only corrected bugs, but
+ * added return value.  Will return 1 if the elmnts (input) is the same at the end
+ * of the operation as it was when this function received it.  Meaning it wasn't changed
+ * within this function.
+ */
 {
     int i, j, k;
     
@@ -58,6 +64,15 @@ void CompareSplit(int nlocal, int *elmnts, int *relmnts, int *wspace, int keepsm
                 elmnts[k] = relmnts[j--];
         }
     }
+
+    /* Added this loop to textbook function.  If any element has changed, return 0. */
+    for (i=0; i<nlocal; i++)
+        if(wspace[i] != elmnts[i]) {
+            return 0;
+        }
+
+    /* if we are here, no elements changed, return 1 */
+    return 1;
 }
 
 /**
@@ -113,7 +128,10 @@ int main(int argc,char* argv[]) {
     int *working_space;
     /* odd and even ranks (right or left) */
     int odd_rank, even_rank;
-
+    /* Variable used to track if our local_array changed */
+    int array_elements_unchanged;
+    /* Variable used to count all other processes that didnt' change their elements */
+    int array_elements_unchanged_count;
     /* Timer variables */
     double start_time, end_time;
 
@@ -193,8 +211,20 @@ int main(int argc,char* argv[]) {
          */
         // CompareSplit(number_of_local_elements, local_array, recieved_array, working_space, rank < status.MPI_SOURCE);
         if(status.MPI_SOURCE != MPI_PROC_NULL) {
-            CompareSplit(number_of_local_elements, local_array, recieved_array, working_space, rank < status.MPI_SOURCE);
+            array_elements_unchanged = CompareSplit(number_of_local_elements, local_array, recieved_array, 
+                working_space, rank < status.MPI_SOURCE);
         }
+        else {
+            /* if we aren't operating on this phase, we need to indicate that our values didn't change */
+            array_elements_unchanged = 1;
+        }
+        MPI_Allreduce( &array_elements_unchanged, &array_elements_unchanged_count, 1 , MPI_INT , MPI_SUM , MPI_COMM_WORLD);
+        if(array_elements_unchanged_count == number_of_processes) {
+            /* Hurray!! we all agree we are in order! */
+            array_elements_unchanged_count = i;
+            break;
+        }
+        array_elements_unchanged_count = -1;
     }
 
 /**
@@ -239,12 +269,19 @@ int main(int argc,char* argv[]) {
 
         /* output execution time to file */
         outfile = fopen(REPORTFILENAME, "a");
-        fprintf(outfile, "Standard Even/Odd - MPI %d process - 2**%d array - time: %f \n", number_of_processes, array_size_power, total_time);
+        fprintf(outfile, "Variant Even/Odd - MPI %d process - 2**%d array - time: %f ", number_of_processes, array_size_power, total_time);
+        if( array_elements_unchanged_count > -1) {
+            fprintf(outfile, " (Ended early at step %d)", array_elements_unchanged_count);
+        }
+        fprintf(outfile, "\n");
         fclose(outfile);
 
         /* Print execution time to screen*/
-        printf("Standard Even/Odd - MPI %d process - 2**%d array - time: %f \n", number_of_processes, array_size_power, total_time);
-
+        printf("Variant Even/Odd - MPI %d process - 2**%d array - time: %f ", number_of_processes, array_size_power, total_time);
+        if( array_elements_unchanged_count > -1) {
+            printf(" (Ended early at step %d)", array_elements_unchanged_count);
+        }
+        printf("\n");
 
 /**
  * TESTING!!
