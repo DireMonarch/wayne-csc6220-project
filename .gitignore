@@ -1,3 +1,14 @@
+# Project specifics
+jim-haslett-csc6220-project-variant
+jim-haslett-csc6220-project-standard
+jim-haslett-csc6220-project-serial-quicksort
+*.txt
+*.zip
+*.csv
+*.tsv
+extra/
+
+
 # Prerequisites
 *.d
 
